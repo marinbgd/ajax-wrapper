@@ -18,13 +18,14 @@ describe('ajax', () => {
     })
 
     describe('get', () => {
+        
+        const testUrl = 'http://localhost/proba'
+
         it('should have get method', () => {
             expect(ajax.get).toBeDefined()
         })
 
         it('should make simple url get using fetch', () => {
-            const testUrl = 'http://localhost/proba'
-
             ajax.get({url: testUrl})
 
             expect(global.fetch.mock.calls.length).toBe(1)
@@ -32,7 +33,6 @@ describe('ajax', () => {
         })
 
         it('should call get method with url and params', () => {
-            const testUrl = 'http://localhost/proba'
             const testParams = {
                 first: 'aa',
                 second: 'bb',
@@ -46,7 +46,6 @@ describe('ajax', () => {
         })
 
         it('should call get method with url and encoded params', () => {
-            const testUrl = 'http://localhost/proba'
             const testParams = {
                 first: ' aa',
             }
@@ -59,7 +58,6 @@ describe('ajax', () => {
         })
 
         it('should call get method with sorted params in query', () => {
-            const testUrl = 'http://localhost/proba'
             const testParams = {
                 second: 'bb',
                 first: 'aa',
@@ -73,7 +71,6 @@ describe('ajax', () => {
         })
 
         it('should call get method with headers', () => {
-            const testUrl = 'http://localhost/proba'
             const headers = {
                 'Content-Type': 'text/plain',
                 'X-Custom-Header': 'ProcessThisImmediately',
@@ -91,8 +88,6 @@ describe('ajax', () => {
                 statusText: 'error',
             })
             global.fetch = jest.fn().mockImplementation(() => mockFetchPromise)
-
-            const testUrl = 'http://localhost/proba'
             
             expect(ajax.get({url: testUrl})).rejects.toThrow('error')
         })
