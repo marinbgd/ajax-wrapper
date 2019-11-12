@@ -16,19 +16,33 @@ const _getFetchArgs = (urlWithParams, options) => {
     return fetchPromiseCallArgs
 }
 
+const _getEncodedParams = params => {
+    if (!params) {
+        return params
+    }
+
+    let encodedParams = {}
+    Object.keys(params).forEach( key => {
+        const encodedKey = window.encodeURIComponent(key)
+        const encodedParam = window.encodeURIComponent(params[key])
+        encodedParams[encodedKey] = encodedParam
+    })
+    return encodedParams
+}
 const _addParamsToUrl = (url, params) => {
     if (!params) {
         return url
     }
 
-    const keys = Object.keys(params)
+    const encodedParams = _getEncodedParams(params)
+    const keys = Object.keys(encodedParams)
     const orderedKeys = keys.sort()
     let urlWithQuery = url
     orderedKeys.forEach((key, index) => {
         if (index === 0) {
-            urlWithQuery += `?${key}=${params[key]}`
+            urlWithQuery += `?${key}=${encodedParams[key]}`
         } else {
-            urlWithQuery += `&${key}=${params[key]}`
+            urlWithQuery += `&${key}=${encodedParams[key]}`
         }
     })
 

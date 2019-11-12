@@ -41,6 +41,19 @@ describe('ajax', () => {
             expect(global.fetch).toBeCalledWith(resultingUrl)
         })
 
+        it('should call get method with url and encoded params', () => {
+            const testUrl = 'http://localhost/proba'
+            const testParams = {
+                first: ' aa',
+            }
+            const resultingUrl = testUrl + '?first=%20aa'
+
+            ajax.get({url: testUrl, params: testParams})
+
+            expect(global.fetch.mock.calls.length).toBe(1)
+            expect(global.fetch).toBeCalledWith(resultingUrl)
+        })
+
         it('should call get method with sorted params in query', () => {
             const testUrl = 'http://localhost/proba'
             const testParams = {
