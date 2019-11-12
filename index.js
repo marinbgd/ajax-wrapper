@@ -4,8 +4,15 @@ const get = ({url, params = null, headers = null}) => {
     const fetchPromiseCallArgs = _getFetchArgs(urlWithParams, options)
     
     return window.fetch(...fetchPromiseCallArgs)
+        .then(_handleFetchErrors)
         .then(response => response.json())
-        .catch(console.log)
+}
+
+const _handleFetchErrors = fetchResponse => {
+    if (!fetchResponse.ok) {
+        throw Error(fetchResponse.statusText);
+    }
+    return fetchResponse;
 }
 
 const _getFetchArgs = (urlWithParams, options) => {

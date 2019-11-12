@@ -4,7 +4,11 @@ import ajax from './index'
 describe('ajax', () => {
 
     beforeEach(() => {
-        const mockFetchPromise = Promise.resolve()
+        const mockFetchPromise = Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => {}
+        })
         global.fetch = jest.fn().mockImplementation(() => mockFetchPromise)
     })
 
@@ -79,6 +83,18 @@ describe('ajax', () => {
 
             expect(global.fetch.mock.calls.length).toBe(1)
             expect(global.fetch).toBeCalledWith(testUrl, headers)
+        })
+
+        it('should throw an error when api response status is 400', () => {                
+            const mockFetchPromise = Promise.resolve({
+                ok: false,
+                statusText: 'error',
+            })
+            global.fetch = jest.fn().mockImplementation(() => mockFetchPromise)
+
+            const testUrl = 'http://localhost/proba'
+            
+            expect(ajax.get({url: testUrl})).rejects.toThrow('error')
         })
     })
 })
