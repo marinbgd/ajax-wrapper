@@ -54,5 +54,18 @@ describe('ajax', () => {
             expect(global.fetch.mock.calls.length).toBe(1)
             expect(global.fetch).toBeCalledWith(resultingUrl)
         })
+
+        it('should call get method with headers', () => {
+            const testUrl = 'http://localhost/proba'
+            const headers = {
+                'Content-Type': 'text/plain',
+                'X-Custom-Header': 'ProcessThisImmediately',
+            }
+
+            ajax.get({url: testUrl, headers })
+
+            expect(global.fetch.mock.calls.length).toBe(1)
+            expect(global.fetch).toBeCalledWith(testUrl, headers)
+        })
     })
 })
