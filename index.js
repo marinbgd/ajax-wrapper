@@ -1,7 +1,7 @@
 const MINUTE_IN_MS = 60000
 const DEFAULT_FETCH_CACHE_TIME = MINUTE_IN_MS; 
 
-class Ajax {
+class Fetcher {
     constructor () {
         this.cache = {}
     }
@@ -155,6 +155,6 @@ class Ajax {
 }
 
 
-const defaultAjaxInstance = new Ajax()
+const defaultInstance = new Fetcher()
 
-export default defaultAjaxInstance
+export default defaultInstance
