@@ -2,8 +2,12 @@ import ajax from './index'
 
 
 describe('ajax', () => {
+    
+    const testUrl = 'http://localhost/proba'
 
     beforeEach(() => {
+        ajax.resetCache()
+
         const mockFetchPromise = Promise.resolve({
             ok: true,
             status: 200,
@@ -19,8 +23,6 @@ describe('ajax', () => {
 
     describe('get', () => {
         
-        const testUrl = 'http://localhost/proba'
-
         it('should have get method', () => {
             expect(ajax.get).toBeDefined()
         })
@@ -92,4 +94,48 @@ describe('ajax', () => {
             expect(ajax.get({url: testUrl})).rejects.toThrow('error')
         })
     })
+
+    describe('get with isCached', () => {
+        it('should call window fetch only once for 2 same request urls', () => {
+            ajax.get({url: testUrl, isCached: true})
+            ajax.get({url: testUrl, isCached: true})
+
+            expect(global.fetch.mock.calls.length).toBe(1)
+        })
+
+        it('should get the same promise for same request url', () => {
+            const promise1 = ajax.get({url: testUrl, isCached: true})
+            const promise2 = ajax.get({url: testUrl, isCached: true})
+
+            expect(promise1).toBe(promise2)
+        })
+
+        it('should get the same promise for same request url handling different param order', () => {
+            const testParams1 = {
+                first: 'aa',
+                second: 'bb',
+            }
+            const testParams2 = {
+                second: 'bb',
+                first: 'aa',
+            }
+            const promise1 = ajax.get({url: testUrl, isCached: true, params: testParams1})
+            const promise2 = ajax.get({url: testUrl, isCached: true, params: testParams2})
+
+            expect(promise1).toBe(promise2)
+        })
+
+        it('should make a new API request using window.fetch after defined cache expiry time', () => {
+
+            jest.useFakeTimers()
+            const cacheExpireInMs = 1000
+            ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
+            jest.advanceTimersByTime(2000);
+            ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
+
+            expect(global.fetch.mock.calls.length).toBe(2)
+
+        })
+    })    
+
 })
