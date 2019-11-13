@@ -6,43 +6,6 @@ class Fetcher {
         this.cache = {}
     }
 
-    get ({
-        url,
-        params = null, 
-        headers = null, 
-        isCached = false,
-        cacheExpireInMs = DEFAULT_FETCH_CACHE_TIME,
-    }) {
-        const urlWithParams = this._addParamsToUrl(url, params)
-        const options = this._addHeadersToOptions(headers)
-        const fetchPromiseCallArgs = this._getFetchArgs(urlWithParams, options)
-        
-        if ( isCached && this._isAjaxRequestInProgress( urlWithParams ) ) {
-            return this._getAjaxRequestInProgress( urlWithParams );
-        }
-
-        if ( isCached && this._isCachedResponseValid( { urlWithParams, cacheExpireInMs } ) ) {
-            return this._getCachedResponse( urlWithParams );
-        }
-    
-        let fetchPromise = window.fetch( ...fetchPromiseCallArgs )
-            .then( this._handleFetchErrors )
-            .then( response => response.json() )
-            .then( response => {
-                this._persistResponse( { urlWithParams, response, cacheExpireInMs } )
-                return response
-            })
-            .finally( () => {
-                this._clearAjaxRequestPromise( urlWithParams );
-            });
-        
-        if (isCached) {
-            this._persistAjaxRequestPromise({ urlWithParams, ajaxPromise: fetchPromise })
-        }
-        
-        return fetchPromise
-    }
-
     _getCachedResponse( urlWithParams ) {
         return Promise.resolve( this.cache[urlWithParams].response );
     }
@@ -142,15 +105,151 @@ class Fetcher {
             return options
         }
     
-        const newHeaders = new Headers(headers)
         return {
             ...options,
-            headers: newHeaders
+            headers,
+        }
+    }
+
+    _addBodyToOptions (options = {}, data = null) {
+        if (!data) {
+            return options
+        }
+
+        return {
+            ...options,
+            body: JSON.stringify(data),
         }
     }
     
+
     resetCache () {
         this.cache = {}
+    }
+
+
+    get ({
+        url,
+        params = null, 
+        headers = null, 
+        isCached = false,
+        cacheExpireInMs = DEFAULT_FETCH_CACHE_TIME,
+    }) {
+        const urlWithParams = this._addParamsToUrl(url, params)
+        const options = this._addHeadersToOptions(headers)
+        const fetchPromiseCallArgs = this._getFetchArgs(urlWithParams, options)
+        
+        if ( isCached && this._isAjaxRequestInProgress( urlWithParams ) ) {
+            return this._getAjaxRequestInProgress( urlWithParams );
+        }
+
+        if ( isCached && this._isCachedResponseValid( { urlWithParams, cacheExpireInMs } ) ) {
+            return this._getCachedResponse( urlWithParams );
+        }
+    
+        let fetchPromise = window.fetch( ...fetchPromiseCallArgs )
+            .then( this._handleFetchErrors )
+            .then( response => response.json() )
+            .then( response => {
+                this._persistResponse( { urlWithParams, response, cacheExpireInMs } )
+                return response
+            })
+            .finally( () => {
+                this._clearAjaxRequestPromise( urlWithParams );
+            });
+        
+        if (isCached) {
+            this._persistAjaxRequestPromise({ urlWithParams, ajaxPromise: fetchPromise })
+        }
+        
+        return fetchPromise
+    }
+
+
+    _makeRequest ({
+        url,
+        data = null,
+        params = null,
+        headers = null,
+        method,
+    }) {
+        const defaultOptions = {
+            method,
+        }
+
+        const urlWithParams = this._addParamsToUrl(url, params)
+
+        const fetchOptions = this._addBodyToOptions(defaultOptions, data)
+        const options = this._addHeadersToOptions(fetchOptions, headers)
+        const fetchPromiseCallArgs = this._getFetchArgs(urlWithParams, options)
+
+        return window.fetch( ...fetchPromiseCallArgs )
+            .then( this._handleFetchErrors )
+            .then( response => response.json() )
+    }
+
+
+    post ({
+        url,
+        data = null,
+        params = null,
+        headers = null,
+    }) {
+        return this._makeRequest({
+            url,
+            data,
+            params,
+            headers,
+            method: 'post'
+        })
+    }
+
+
+    put ({
+        url,
+        data = null,
+        params = null,
+        headers = null,
+    }) {
+        return this._makeRequest({
+            url,
+            data,
+            params,
+            headers,
+            method: 'put'
+        })
+    }
+
+
+    patch ({
+        url,
+        data = null,
+        params = null,
+        headers = null,
+    }) {
+        return this._makeRequest({
+            url,
+            data,
+            params,
+            headers,
+            method: 'patch'
+        })
+    }
+
+
+    delete ({
+        url,
+        data = null,
+        params = null,
+        headers = null,
+    }) {
+        return this._makeRequest({
+            url,
+            data,
+            params,
+            headers,
+            method: 'delete'
+        })
     }
 }
 
