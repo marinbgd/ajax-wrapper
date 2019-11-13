@@ -2,7 +2,9 @@
   "name": "@marinbgd/fetcher",
   "version": "0.1.0",
   "description": "Wrapper around window.fetch with caching",
-  "keywords": ["ajax, fetch"],
+  "keywords": [
+    "ajax, fetch"
+  ],
   "main": "index",
   "scripts": {
     "test": "jest"
