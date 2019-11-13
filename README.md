@@ -1,2 +1,2 @@
-# ajax-wrapper
-Wrapper around window.fetch
+# Fetcher
+Wrapper around window.fetch with caching
