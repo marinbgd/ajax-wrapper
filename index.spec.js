@@ -133,17 +133,18 @@ describe('ajax', () => {
             const result1 = await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
             const result2 = await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
 
-            expect(result1).toStrictEqual(result2) // cannot test for exactly the same object because of the implementation
+            expect(result1).toBe(result2)
             expect(global.fetch.mock.calls.length).toBe(1)
         })
 
         xit('should make a new API request using window.fetch after defined cache expiry time', async () => {
+            // fake timers do not work? should fix the test
             expect.assertions(2)
-            //jest.useFakeTimers()
+            jest.useFakeTimers()
             const cacheExpireInMs = 1000
             await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
-            //jest.advanceTimersByTime(2000);
-            //jest.runAllTimers();
+            jest.advanceTimersByTime(2000);
+            jest.runAllTimers();
             await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
 
             expect(global.fetch.mock.calls.length).toBe(2)

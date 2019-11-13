@@ -39,18 +39,18 @@ class Ajax {
         if (isCached) {
             this._persistAjaxRequestPromise({ urlWithParams, ajaxPromise: fetchPromise })
         }
-    
+        
         return fetchPromise
     }
 
-    _getCachedResponse( url ) {
-        return Promise.resolve( this.cache[url].response );
+    _getCachedResponse( urlWithParams ) {
+        return Promise.resolve( this.cache[urlWithParams].response );
     }
 
-    _isCachedResponseValid( { url, cacheExpireInMs } ) {
-        if ( ! ( this.cache[url] && this.cache[url].response ) ) { return false; }
+    _isCachedResponseValid( { urlWithParams, cacheExpireInMs } ) {
+        if ( ! ( this.cache[urlWithParams] && this.cache[urlWithParams].response ) ) { return false; }
 
-        const cachedResponse = this.cache[url];
+        const cachedResponse = this.cache[urlWithParams];
         const cacheTimeMs = cachedResponse.timestamp.getTime();
         const timeNowInMs = new Date().getTime();
         const diffInMs = timeNowInMs - cacheTimeMs;
