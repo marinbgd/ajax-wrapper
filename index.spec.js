@@ -2,12 +2,18 @@ import ajax from './index'
 
 
 describe('ajax', () => {
+    
+    const testUrl = 'http://localhost/proba'
 
     beforeEach(() => {
+        ajax.resetCache()
+
         const mockFetchPromise = Promise.resolve({
             ok: true,
             status: 200,
-            json: () => {}
+            json: () => ({
+                data: 'test data'
+            })
         })
         global.fetch = jest.fn().mockImplementation(() => mockFetchPromise)
     })
@@ -19,8 +25,6 @@ describe('ajax', () => {
 
     describe('get', () => {
         
-        const testUrl = 'http://localhost/proba'
-
         it('should have get method', () => {
             expect(ajax.get).toBeDefined()
         })
@@ -92,4 +96,60 @@ describe('ajax', () => {
             expect(ajax.get({url: testUrl})).rejects.toThrow('error')
         })
     })
+
+    describe('get with isCached', () => {
+        it('should call window fetch only once for 2 same request urls', () => {
+            ajax.get({url: testUrl, isCached: true})
+            ajax.get({url: testUrl, isCached: true})
+
+            expect(global.fetch.mock.calls.length).toBe(1)
+        })
+
+        it('should get the same promise for same request url', () => {
+            const promise1 = ajax.get({url: testUrl, isCached: true})
+            const promise2 = ajax.get({url: testUrl, isCached: true})
+
+            expect(promise1).toBe(promise2)
+        })
+
+        it('should get the same promise for same request url handling different param order', () => {
+            const testParams1 = {
+                first: 'aa',
+                second: 'bb',
+            }
+            const testParams2 = {
+                second: 'bb',
+                first: 'aa',
+            }
+            const promise1 = ajax.get({url: testUrl, isCached: true, params: testParams1})
+            const promise2 = ajax.get({url: testUrl, isCached: true, params: testParams2})
+
+            expect(promise1).toBe(promise2)
+        })
+
+        it('should return exactly the same response (same object) if same URL and cache is not expired', async () => {
+            expect.assertions(2)
+            const cacheExpireInMs = 100000
+            const result1 = await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
+            const result2 = await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
+
+            expect(result1).toBe(result2)
+            expect(global.fetch.mock.calls.length).toBe(1)
+        })
+
+        xit('should make a new API request using window.fetch after defined cache expiry time', async () => {
+            // fake timers do not work? should fix the test
+            expect.assertions(2)
+            jest.useFakeTimers()
+            const cacheExpireInMs = 1000
+            await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
+            jest.advanceTimersByTime(2000);
+            jest.runAllTimers();
+            await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
+
+            expect(global.fetch.mock.calls.length).toBe(2)
+
+        })
+    })    
+
 })
