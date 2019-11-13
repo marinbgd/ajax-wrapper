@@ -1,6 +1,6 @@
 {
   "name": "@marinbgd/fetcher",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Wrapper around window.fetch with caching",
   "keywords": [
     "ajax, fetch"
