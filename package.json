@@ -5,9 +5,11 @@
   "keywords": [
     "ajax, fetch"
   ],
-  "main": "index",
+  "main": "build/index",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "babel index.js --out-file build/index.js --no-babelrc --presets=@babel/preset-env",
+    "prepublish": "npm run build"
   },
   "author": "Vladimir Marinovic",
   "license": "ISC",
@@ -16,6 +18,7 @@
     "url": "https://github.com/marinbgd/fetcher.git"
   },
   "devDependencies": {
+    "@babel/cli": "7.7.0",
     "@babel/core": "7.7.2",
     "@babel/preset-env": "7.7.1",
     "babel-jest": "24.9.0",
