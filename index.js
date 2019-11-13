@@ -20,10 +20,18 @@ class Ajax {
         if ( isCached && this._isAjaxRequestInProgress( urlWithParams ) ) {
             return this._getAjaxRequestInProgress( urlWithParams );
         }
+
+        if ( isCached && this._isCachedResponseValid( { urlWithParams, cacheExpireInMs } ) ) {
+            return this._getCachedResponse( urlWithParams );
+        }
     
         let fetchPromise = window.fetch( ...fetchPromiseCallArgs )
             .then( this._handleFetchErrors )
             .then( response => response.json() )
+            .then( response => {
+                this._persistResponse( { urlWithParams, response, cacheExpireInMs } )
+                return response
+            })
             .finally( () => {
                 this._clearAjaxRequestPromise( urlWithParams );
             });
@@ -33,6 +41,29 @@ class Ajax {
         }
     
         return fetchPromise
+    }
+
+    _getCachedResponse( url ) {
+        return Promise.resolve( this.cache[url].response );
+    }
+
+    _isCachedResponseValid( { url, cacheExpireInMs } ) {
+        if ( ! ( this.cache[url] && this.cache[url].response ) ) { return false; }
+
+        const cachedResponse = this.cache[url];
+        const cacheTimeMs = cachedResponse.timestamp.getTime();
+        const timeNowInMs = new Date().getTime();
+        const diffInMs = timeNowInMs - cacheTimeMs;
+        return ( diffInMs < cacheExpireInMs );
+    }
+
+    _persistResponse( { urlWithParams, response, cacheExpireInMs } ) {
+        this.cache[urlWithParams] = {
+            ...this.cache[urlWithParams],
+            response,
+            cacheExpireInMs,
+            timestamp: new Date(),
+        }
     }
 
     _isAjaxRequestInProgress( urlWithParams ) {
