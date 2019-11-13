@@ -1,3 +1,6 @@
+const MINUTE_IN_MS = 60000
+const DEFAULT_FETCH_CACHE_TIME = MINUTE_IN_MS; 
+
 class Ajax {
     constructor () {
         this.cache = {}
@@ -8,28 +11,50 @@ class Ajax {
         params = null, 
         headers = null, 
         isCached = false,
+        cacheExpireInMs = DEFAULT_FETCH_CACHE_TIME,
     }) {
         const urlWithParams = this._addParamsToUrl(url, params)
         const options = this._addHeadersToOptions(headers)
         const fetchPromiseCallArgs = this._getFetchArgs(urlWithParams, options)
         
-        if (isCached && this._isUrlAlreadyInCache(urlWithParams)) {
-            return this.cache[urlWithParams]
+        if ( isCached && this._isAjaxRequestInProgress( urlWithParams ) ) {
+            return this._getAjaxRequestInProgress( urlWithParams );
         }
     
-        let fetchPromise = window.fetch(...fetchPromiseCallArgs)
-            .then(this._handleFetchErrors)
-            .then(response => response.json())
+        let fetchPromise = window.fetch( ...fetchPromiseCallArgs )
+            .then( this._handleFetchErrors )
+            .then( response => response.json() )
+            .finally( () => {
+                this._clearAjaxRequestPromise( urlWithParams );
+            });
         
         if (isCached) {
-            this.cache[urlWithParams] = fetchPromise
+            this._persistAjaxRequestPromise({ urlWithParams, ajaxPromise: fetchPromise })
         }
     
         return fetchPromise
     }
-    
-    _isUrlAlreadyInCache (urlWithParams) {
-        return !!this.cache[urlWithParams]
+
+    _isAjaxRequestInProgress( urlWithParams ) {
+        return !!(this.cache[urlWithParams] && this.cache[urlWithParams].ajaxPromise);
+    }
+
+    _getAjaxRequestInProgress( urlWithParams ) {
+        return this.cache[urlWithParams].ajaxPromise;
+    }
+
+    _persistAjaxRequestPromise( { urlWithParams, ajaxPromise } ) {
+        this.cache[urlWithParams] = {
+            ...this.cache[urlWithParams],
+            ajaxPromise,
+        };
+    }
+
+    _clearAjaxRequestPromise( urlWithParams ) {
+        if (!this.cache[urlWithParams]) {
+            this.cache[urlWithParams] = {};
+        }
+        this.cache[urlWithParams].ajaxPromise = null;
     }
     
     _handleFetchErrors (fetchResponse) {

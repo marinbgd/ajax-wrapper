@@ -11,7 +11,9 @@ describe('ajax', () => {
         const mockFetchPromise = Promise.resolve({
             ok: true,
             status: 200,
-            json: () => {}
+            json: () => ({
+                data: 'test data'
+            })
         })
         global.fetch = jest.fn().mockImplementation(() => mockFetchPromise)
     })
@@ -125,13 +127,24 @@ describe('ajax', () => {
             expect(promise1).toBe(promise2)
         })
 
-        it('should make a new API request using window.fetch after defined cache expiry time', () => {
-
-            jest.useFakeTimers()
+        it.only('should return exactly the same response (same object) if same URL and cache is not expired', async () => {
             const cacheExpireInMs = 1000
-            ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
-            jest.advanceTimersByTime(2000);
-            ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
+            const result1 = await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
+            const result2 = await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
+
+            console.log(result1)
+            console.log(result2)
+            expect(result1).toBe(result2)
+        })
+
+        it('should make a new API request using window.fetch after defined cache expiry time', async () => {
+
+            // jest.useFakeTimers()
+            const cacheExpireInMs = 1000
+            await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
+            // jest.advanceTimersByTime(2000);
+            // jest.runAllTimers();
+            await ajax.get({url: testUrl, isCached: true, cacheExpireInMs})
 
             expect(global.fetch.mock.calls.length).toBe(2)
 
