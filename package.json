@@ -8,7 +8,7 @@
   "main": "build/index",
   "scripts": {
     "test": "jest",
-    "build": "babel index.js --out-file build/index.js --no-babelrc --presets=@babel/preset-env",
+    "build": "babel src/index.js --out-file build/index.js --no-babelrc --presets=@babel/preset-env",
     "prepublish": "npm run build"
   },
   "author": "Vladimir Marinovic",
