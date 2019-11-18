@@ -1,23 +1,25 @@
+import { 
+    _handleFetchErrors,
+    _getFetchArgsArray,
+    _addParamsToUrl,
+    _addHeadersToOptions,
+    _addBodyToOptions,
+    _isCachedResponseExisting,
+    _isCachedResponseValid,
+ } from './index.helper'
+
+
 const MINUTE_IN_MS = 60000
 const DEFAULT_FETCH_CACHE_TIME = MINUTE_IN_MS; 
+
 
 class Fetcher {
     constructor () {
         this.cache = {}
     }
 
-    _getCachedResponse( urlWithParams ) {
-        return Promise.resolve( this.cache[urlWithParams].response );
-    }
-
-    _isCachedResponseValid( { urlWithParams, cacheExpireInMs } ) {
-        if ( ! ( this.cache[urlWithParams] && this.cache[urlWithParams].response ) ) { return false; }
-
-        const cachedResponse = this.cache[urlWithParams];
-        const cacheTimeMs = cachedResponse.timestamp.getTime();
-        const timeNowInMs = new Date().getTime();
-        const diffInMs = timeNowInMs - cacheTimeMs;
-        return ( diffInMs < cacheExpireInMs );
+    _getCachedResponseByUrl ( cache, urlWithParams ) {
+        return Promise.resolve( cache[urlWithParams].response );
     }
 
     _persistResponse( { urlWithParams, response, cacheExpireInMs } ) {
@@ -50,83 +52,10 @@ class Fetcher {
         }
         this.cache[urlWithParams].ajaxPromise = null;
     }
-    
-    _handleFetchErrors (fetchResponse) {
-        if (!fetchResponse.ok) {
-            throw Error(fetchResponse.statusText);
-        }
-        return fetchResponse;
-    }
-    
-    _getFetchArgs (urlWithParams, options) {
-        let fetchPromiseCallArgs = [urlWithParams]
-        if (options) {
-            fetchPromiseCallArgs = [urlWithParams, options]
-        }
-        return fetchPromiseCallArgs
-    }
-    
-    _getEncodedParams (params) {
-        if (!params) {
-            return params
-        }
-    
-        let encodedParams = {}
-        Object.keys(params).forEach( key => {
-            const encodedKey = window.encodeURIComponent(key)
-            const encodedParam = window.encodeURIComponent(params[key])
-            encodedParams[encodedKey] = encodedParam
-        })
-        return encodedParams
-    }
-
-    _addParamsToUrl (url, params) {
-        if (!params) {
-            return url
-        }
-    
-        const encodedParams = this._getEncodedParams(params)
-        const keys = Object.keys(encodedParams)
-        const orderedKeys = keys.sort()
-        let urlWithQuery = url
-        orderedKeys.forEach((key, index) => {
-            if (index === 0) {
-                urlWithQuery += `?${key}=${encodedParams[key]}`
-            } else {
-                urlWithQuery += `&${key}=${encodedParams[key]}`
-            }
-        })
-    
-        return urlWithQuery
-    }
-    
-    _addHeadersToOptions (options = {}, headers = null) {
-        if (!headers) {
-            return options
-        }
-    
-        return {
-            ...options,
-            headers,
-        }
-    }
-
-    _addBodyToOptions (options = {}, data = null) {
-        if (!data) {
-            return options
-        }
-
-        return {
-            ...options,
-            body: JSON.stringify(data),
-        }
-    }
-    
 
     resetCache () {
         this.cache = {}
     }
-
 
     get ({
         url,
@@ -135,20 +64,25 @@ class Fetcher {
         isCached = false,
         cacheExpireInMs = DEFAULT_FETCH_CACHE_TIME,
     }) {
-        const urlWithParams = this._addParamsToUrl(url, params)
-        const options = this._addHeadersToOptions(headers)
-        const fetchPromiseCallArgs = this._getFetchArgs(urlWithParams, options)
+        const urlWithParams = _addParamsToUrl(url, params)
         
         if ( isCached && this._isAjaxRequestInProgress( urlWithParams ) ) {
             return this._getAjaxRequestInProgress( urlWithParams );
         }
 
-        if ( isCached && this._isCachedResponseValid( { urlWithParams, cacheExpireInMs } ) ) {
-            return this._getCachedResponse( urlWithParams );
+        if (
+            isCached &&
+            _isCachedResponseExisting( { cache: this.cache, urlWithParams, } ) &&
+            _isCachedResponseValid( { cache: this.cache, urlWithParams, cacheExpireInMs } )
+        ) {
+            return this._getCachedResponseByUrl( this.cache, urlWithParams );
         }
+
+        const options = _addHeadersToOptions(null, headers)
+        const fetchPromiseCallArgs = _getFetchArgsArray(urlWithParams, options)
     
         let fetchPromise = window.fetch( ...fetchPromiseCallArgs )
-            .then( this._handleFetchErrors )
+            .then( _handleFetchErrors )
             .then( response => response.json() )
             .then( response => {
                 this._persistResponse( { urlWithParams, response, cacheExpireInMs } )
@@ -177,14 +111,14 @@ class Fetcher {
             method,
         }
 
-        const urlWithParams = this._addParamsToUrl(url, params)
+        const urlWithParams = _addParamsToUrl(url, params)
 
-        const fetchOptions = this._addBodyToOptions(defaultOptions, data)
-        const options = this._addHeadersToOptions(fetchOptions, headers)
-        const fetchPromiseCallArgs = this._getFetchArgs(urlWithParams, options)
+        const fetchOptions = _addBodyToOptions(defaultOptions, data)
+        const options = _addHeadersToOptions(fetchOptions, headers)
+        const fetchPromiseCallArgs = _getFetchArgsArray(urlWithParams, options)
 
         return window.fetch( ...fetchPromiseCallArgs )
-            .then( this._handleFetchErrors )
+            .then( _handleFetchErrors )
             .then( response => response.json() )
     }
 

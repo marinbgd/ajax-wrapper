@@ -84,7 +84,7 @@ describe('fetcher', () => {
                 fetch.get({url: testUrl, headers })
     
                 expect(global.fetch.mock.calls.length).toBe(1)
-                expect(global.fetch).toBeCalledWith(testUrl, headers)
+                expect(global.fetch).toBeCalledWith(testUrl, { headers })
             })
     
             it('should throw an error on get request when api response status is 400', () => {                
